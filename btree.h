@@ -1,28 +1,43 @@
+/*---------------------------------------------*/
+/*--Igor Guilherme Pereira Lorendo - 11275071--*/
+/*-------Nata Silva Botelho - 11275105---------*/
+/*---------------------------------------------*/
+
 #ifndef _btree_c
 #define _btree_c
 
-#define TAM 16
+#define SIZE 16
+#define ORDER 4
 
+#include <stdbool.h>
 
-
-struct aluno{
+/*Structs*/
+typedef struct _register{
     int numUSP;
-    char nome[TAM]; // 16
-    char sobrenome[TAM]; // 16
-    char curso[TAM]; // 16
-    float nota;
-};
+    char name[SIZE]; 
+    char surname[SIZE]; 
+    char course[SIZE];
+    float grade;
+}Register;
 
-struct index{
-    int key;
+typedef struct _index{
+    int prim_key;
     long RNN;
-};
+}Index;
+
+typedef struct _node{
+    struct _node *children[ORDER];
+    Index *keys[ORDER-1];
+    int key_count;
+    bool is_leaf;
+}Node;
+
+typedef struct _tree{
+    int order;
+    Node **root;
+}Tree;
 
 
-
-typedef struct aluno Aluno;
-typedef struct index Index;
-
+/*Functions*/
 
 #endif
-
