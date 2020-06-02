@@ -7,8 +7,11 @@
 #define _btree_c
 
 #define SIZE 16
-#define ORDER 4
- 
+#define ORDER 5
+#define TRUE 1
+#define FALSE 0
+#define SIZEPAGE 4096
+
 #include <stdbool.h>
 
 /*Structs*/
@@ -26,19 +29,24 @@ typedef struct _index{
 }Index;
 
 typedef struct _node{
-    struct _node *children[ORDER];
-    Index *keys[ORDER-1];
-    int key_count;
     bool is_leaf;
+    int key_count;
+    long *children;
+    Index *keys;
 }Node;
 
-typedef struct _tree{
-    int order;
-    Node **root;
-}Tree;
 
 
 /*Functions*/
+Node *createNode(bool);
+
+Register *createRegister();
+
+int writeRegisterOnFile(Register*);
+
+void addRegister();
+
+Node *getRoot(FILE*);
 
 
 
