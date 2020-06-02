@@ -6,8 +6,17 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "btree.h"
-
+ 
 int main(){
+
+    int option = 0;
+    do{
+        scanf("%d", &option);
+        if(option == 1){
+            addRegister();
+        }
+    }while(option);
+    
     
     return 0;
 };
