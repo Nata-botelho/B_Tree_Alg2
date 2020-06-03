@@ -52,9 +52,10 @@ Register readRegisterFromFile(long);
 
 void printRegister(Register);
 
-void writePageOnFile(FILE*,Node*,long);
+void writePageOnFile(FILE*, Node*, long);
 
 Node *readPageFile(FILE*);
 
+void addIndexToTree(Index*);
 
 #endif
