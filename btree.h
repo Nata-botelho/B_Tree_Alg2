@@ -10,7 +10,7 @@
 #define ORDER 5
 #define TRUE 1
 #define FALSE 0
-#define SIZEPAGE 4096
+#define PAGESIZE 4096
 
 #include <stdbool.h>
 
@@ -42,14 +42,16 @@ Node *createNode(bool);
 
 Register *createRegister();
 
-int writeRegisterOnFile(Register*);
+Index *writeRegisterOnFile(Register*);
 
 void addRegister();
 
 Node *getRoot(FILE*);
 
+Register readRegisterFromFile(long);
 
+void printRegister(Register);
 
-
+void getRegister();
 
 #endif

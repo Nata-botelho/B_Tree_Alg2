@@ -16,6 +16,9 @@ int main(){
         if(option == 1){
             addRegister();
         }
+        else if(option == 2){
+            getRegister();
+        }
     }while(option);
     
     

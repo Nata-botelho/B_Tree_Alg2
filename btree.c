@@ -8,7 +8,6 @@
 #include "btree.h"
 
 
-
 Node *createNode(bool is_leaf){
     int i;
     Node *newNode;
@@ -18,9 +17,9 @@ Node *createNode(bool is_leaf){
     newNode->key_count = 0;
     newNode->keys = (Index*) malloc ((ORDER-1) * sizeof(Index));
     newNode->children = (long*) malloc (ORDER * sizeof(long));
-     for(i = 0; i < ORDER;i++)
-        newNode->children = -1;
-    
+    for(i = 0; i < ORDER; i++)
+        newNode->children[i] = -1;
+
     return newNode;
 }
 
@@ -28,7 +27,7 @@ Register *createRegister(){
     Register *newReg = (Register*) calloc(1, sizeof(Register));
 
     printf("Student's NUSP:");
-	scanf("%u", &newReg->numUSP);
+	scanf("%d", &newReg->numUSP);
 
 	printf("\nStudent's name:");
 	scanf(" %[^\n]", newReg->name);
@@ -45,37 +44,72 @@ Register *createRegister(){
     return newReg;
 }
 
-int writeRegisterOnFile(Register *newReg){
-    FILE *data_file = fopen("dados.txt", "a+");
+Index *writeRegisterOnFile(Register *newReg){
+    FILE *data_file = fopen("dados.txt", "ab+");
     if(!data_file)  printf("Erro no arquivo de dados!\n");
     fseek(data_file, 0, SEEK_END);
-    fprintf(data_file, "%d%s%s%s%f", newReg->numUSP, newReg->name, newReg->surname, newReg->course, newReg->grade);
+
+    Index *newIndex = (Index*) malloc (sizeof(Index));
+    newIndex->prim_key = newReg->numUSP;
+    newIndex->RNN = ftell(data_file);
+
+    printf("Gravado no RRN: %ld\n", newIndex->RNN);
+    fwrite(newReg, sizeof(Register), 1, data_file);
 
     fclose(data_file);
-    return 1;
+    return newIndex;
 }
- 
+
 void addRegister(){
     Register *newReg = createRegister();
+    Index *newIndex;
     if(newReg){
-        if(writeRegisterOnFile(newReg)){
+        newIndex = writeRegisterOnFile(newReg);
+        if(newIndex){
             printf("registro adicionado com sucesso!\n");
         }
     }
 }
 
+Node *getRoot(FILE* index_file){
+    if(!index_file) return NULL;
 
-Node *getRoot(FILE* arq){
-    if(!arq) return NULL;
-    rewind(arq);
-    if(!ftell(arq)) return createNode(TRUE);
+    fseek(index_file, 0, SEEK_END);
+    if(!ftell(index_file)) return createNode(TRUE);
+
     Node *root = (Node*)malloc(sizeof(Node));
     long header;
-    fread(&header,sizeof(long),1,arq);
-    fseek(arq,header*(PAGESIZE),SEEK_SET);
-    fread(root,sizeof(Node),1,arq);
+    fread(&header, sizeof(long), 1, index_file);
+    fseek(index_file, header*(PAGESIZE), SEEK_SET);
+    fread(&root, sizeof(Node), 1, index_file);
 
     return root;
 }
 
+Register readRegisterFromFile(long RRN){
+    Register auxReg;
 
+    FILE *data_file = fopen("dados.txt", "ab+");
+    if(!data_file)  printf("Erro no arquivo de dados!\n");
+
+    fseek(data_file, RRN, SEEK_SET);
+    fread(&auxReg, sizeof(Register), 1, data_file);
+
+    return auxReg;
+}
+
+void printRegister(Register reg){
+    printf("Nusp: %d\n", reg.numUSP);
+    printf("Name: %s\n", reg.name);
+    printf("Surname: %s\n", reg.surname);
+    printf("Course: %s\n", reg.course);
+    printf("Grade: %.2f\n", reg.grade);
+}
+
+void getRegister(){
+    long RRN;
+    /*printf("RRN: ");
+    scanf("%ld", &RRN);*/
+    Register auxReg = readRegisterFromFile(RRN);
+    printRegister(auxReg);
+}
