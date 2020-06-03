@@ -23,7 +23,7 @@ Node *createNode(bool is_leaf){
 
     newNode->children = (long*) malloc (ORDER * sizeof(long));
      for(i = 0; i < ORDER;i++)
-        newNode->children = -1;
+        newNode->children[i] = -1;
     
     return newNode;
 }
@@ -72,17 +72,17 @@ Node *readPageFile(FILE*arq){
     if(!arq) return NULL;
     int i;
     Node *new = createNode(FALSE);
-    fread(new->is_leaf,sizeof(bool),1,arq);
-    fread(new->key_count,sizeof(int),1,arq);
+    fread(&new->is_leaf,sizeof(bool),1,arq);
+    fread(&new->key_count,sizeof(int),1,arq);
 
     for(i = 0; i < ORDER; i++)
-        fread(new->children[i],sizeof(long),1,arq);
+        fread(&new->children[i],sizeof(long int ),1,arq);
 
     for(i = 0; i < ORDER - 1; i++)
-        fread(new->keys[i].prim_key,sizeof(int),1,arq);
+        fread(&new->keys[i].prim_key,sizeof(int),1,arq);
 
     for(i = 0; i < ORDER - 1; i++)
-        fread(new->keys[i].RNN,sizeof(long),1,arq);
+        fread(&new->keys[i].RNN,sizeof(long int),1,arq);
 
     return new;
 }
@@ -90,8 +90,9 @@ Node *readPageFile(FILE*arq){
 
 Node *getRoot(FILE* arq){
     if(!arq) return NULL;
-    rewind(arq);
+    fseek(arq, 0, SEEK_END);
     if(!ftell(arq)) return createNode(TRUE);
+    rewind(arq);
     long header;
     fread(&header,sizeof(long),1,arq);
     fseek(arq,header*(PAGESIZE),SEEK_SET);
@@ -105,7 +106,7 @@ int _writePageOnFile(FILE *arq,Node *page,long rrn){
     if(!page) return -2;
     if(rrn < 0) return -3;
     
-    int i;
+    /*int i;
     fwrite(&page->is_leaf,sizeof(bool),1,arq);
     fwrite(&page->key_count,sizeof(int),1,arq);
     fseek(arq,rrn*PAGESIZE,SEEK_SET);
@@ -119,7 +120,11 @@ int _writePageOnFile(FILE *arq,Node *page,long rrn){
     for(i =0 ; i < ORDER - 1; i++)
         fwrite(&page->keys[i].RNN,sizeof(long),1,arq);
 
-    return 1;
+    return 1; */
+
+    
+    fwrite(&page,sizeof(Node),1,arq);
+
 }
 
 void writePageOnFile(FILE*arq,Node*page,long rrn){
