@@ -52,6 +52,9 @@ Register readRegisterFromFile(long);
 
 void printRegister(Register);
 
-void getRegister();
+void writePageOnFile(FILE*,Node*,long);
+
+Node *readPageFile(FILE*);
+
 
 #endif

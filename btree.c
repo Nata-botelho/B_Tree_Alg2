@@ -15,7 +15,11 @@ Node *createNode(bool is_leaf){
     
     newNode->is_leaf = is_leaf;
     newNode->key_count = 0;
-    newNode->keys = (Index*) malloc ((ORDER-1) * sizeof(Index));
+
+    newNode->keys = (Index*) calloc ((ORDER-1) , sizeof(Index));
+    for(i = 0; i < ORDER - 1;i++)
+        newNode->keys[i].prim_key = -1;
+
     newNode->children = (long*) malloc (ORDER * sizeof(long));
     for(i = 0; i < ORDER; i++)
         newNode->children[i] = -1;
@@ -108,8 +112,46 @@ void printRegister(Register reg){
 
 void getRegister(){
     long RRN;
-    /*printf("RRN: ");
-    scanf("%ld", &RRN);*/
     Register auxReg = readRegisterFromFile(RRN);
     printRegister(auxReg);
+}
+
+Node *readPageFile(FILE *index_file){
+    if(!index_file) return NULL;
+
+    Node *auxNode = (Node*) malloc (sizeof(Node));
+    fread(&(*auxNode), sizeof(Node), 1,index_file);
+
+    return auxNode;
+}
+
+/*write in page*/
+int _writePageOnFile(FILE *arq,Node *page,long rrn){
+    if(!arq) return -1;
+    if(!page) return -2;
+    if(rrn < 0) return -3;
+    
+    int i;
+    fwrite(&page->is_leaf,sizeof(bool),1,arq);
+    fwrite(&page->key_count,sizeof(int),1,arq);
+    fseek(arq,rrn*PAGESIZE,SEEK_SET);
+   
+    for(i =0 ; i < ORDER ; i++)
+        fwrite(&page->children[i],sizeof(long),1,arq);
+
+    for(i =0 ; i < ORDER -1 ; i++)
+        fwrite(&page->keys[i].prim_key,sizeof(int),1,arq);
+
+    for(i =0 ; i < ORDER - 1; i++)
+        fwrite(&page->keys[i].RNN,sizeof(long),1,arq);
+
+    return 1;
+}
+
+void writePageOnFile(FILE*arq,Node*page,long rrn){
+    if(_writePageOnFile(arq,page,rrn)){
+        printf("Pagina Inserida\n");
+    }else{
+        printf("Erro ao inserir pagina\n");
+    }
 }
