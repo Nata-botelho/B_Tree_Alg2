@@ -24,15 +24,15 @@ typedef struct _register{
 }Register;
 
 typedef struct _index{
-    int prim_key;
-    long RNN;
+    int prim_key; /*  4 */
+    long RNN; /* 8 */
 }Index;
 
 typedef struct _node{
-    bool is_leaf;
-    int key_count;
-    long *children;
-    Index *keys;
+    bool is_leaf; /*1*/
+    int key_count; /* 4*/
+    long *children; /* 8 */
+    Index *keys; /* 12 */
 }Node;
 
 
@@ -42,15 +42,22 @@ Node *createNode(bool);
 
 Register *createRegister();
 
-int writeRegisterOnFile(Register*);
+Index *writeRegisterOnFile(Register*);
 
 void addRegister();
 
 Node *getRoot(FILE*);
 
-
 void writePageOnFile(FILE*,Node*,long);
 
 Node *readPageFile(FILE*);
+
+int freeSpaceOnPage();
+
+Node *getPageOnFile(FILE*, long);
+
+void addIndexToTree(FILE* , Node*,Index *)
+
+
 
 #endif

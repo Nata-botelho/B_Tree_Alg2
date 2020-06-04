@@ -10,12 +10,15 @@
 int main(){
 
     int option = 0;
-    
+
     do{
         scanf("%d", &option);
-        if(option == 1){
+
+        if(option == 1)
             addRegister();
-        }
+        else if(option == 2)
+            getRegister();
+            
     }while(option);
     
     

@@ -8,23 +8,26 @@
 #include "btree.h"
 
 
-
 Node *createNode(bool is_leaf){
     int i;
-    Node *newNode;
-    newNode = (Node*) malloc (sizeof(Node));
+    Node *newNode = (Node*) malloc (sizeof(Node));
     
     newNode->is_leaf = is_leaf;
     newNode->key_count = 0;
-    newNode->keys = (Index*) calloc ((ORDER-1) , sizeof(Index));
 
-    for(i = 0; i < ORDER - 1;i++)
+    newNode->keys = (Index*) calloc ((ORDER-1), sizeof(Index));
+    for(i = 0; i < (ORDER-1); i++)
         newNode->keys[i].prim_key = -1;
 
     newNode->children = (long*) malloc (ORDER * sizeof(long));
      for(i = 0; i < ORDER;i++)
         newNode->children[i] = -1;
     
+
+    for(i = 0; i < ORDER; i++)
+        newNode->children[i] = -1;
+
+
     return newNode;
 }
 
@@ -32,7 +35,7 @@ Register *createRegister(){
     Register *newReg = (Register*) calloc(1, sizeof(Register));
 
     printf("Student's NUSP:");
-	scanf("%u", &newReg->numUSP);
+	scanf("%d", &newReg->numUSP);
 
 	printf("\nStudent's name:");
 	scanf(" %[^\n]", newReg->name);
@@ -49,82 +52,100 @@ Register *createRegister(){
     return newReg;
 }
 
-int writeRegisterOnFile(Register *newReg){
-    FILE *data_file = fopen("dados.txt", "a+");
+Index *writeRegisterOnFile(Register *newReg){
+    FILE *data_file = fopen("dados.txt", "ab+");
     if(!data_file)  printf("Erro no arquivo de dados!\n");
     fseek(data_file, 0, SEEK_END);
-    fprintf(data_file, "%d%s%s%s%f", newReg->numUSP, newReg->name, newReg->surname, newReg->course, newReg->grade);
+
+    Index *newIndex = (Index*) malloc (sizeof(Index));
+    newIndex->prim_key = newReg->numUSP;
+    newIndex->RNN = ftell(data_file);
+
+    /*printf("Gravado no RRN: %ld\n", newIndex->RNN);*/
+    fwrite(newReg, sizeof(Register), 1, data_file);
 
     fclose(data_file);
-    return 1;
+    return newIndex;
 }
- 
+
+/*add registers on */
 void addRegister(){
     Register *newReg = createRegister();
+    Index *newIndex;
+
     if(newReg){
-        if(writeRegisterOnFile(newReg)){
+        newIndex = writeRegisterOnFile(newReg);
+        if(newIndex){
             printf("registro adicionado com sucesso!\n");
+            addIndexToTree(newIndex);
         }
     }
 }
 
-Node *readPageFile(FILE*arq){
-    if(!arq) return NULL;
-    int i;
-    Node *new = createNode(FALSE);
-    fread(&new->is_leaf,sizeof(bool),1,arq);
-    fread(&new->key_count,sizeof(int),1,arq);
+Node *getRoot(FILE* index_file){
+    if(!index_file) return NULL;
 
-    for(i = 0; i < ORDER; i++)
-        fread(&new->children[i],sizeof(long int ),1,arq);
-
-    for(i = 0; i < ORDER - 1; i++)
-        fread(&new->keys[i].prim_key,sizeof(int),1,arq);
-
-    for(i = 0; i < ORDER - 1; i++)
-        fread(&new->keys[i].RNN,sizeof(long int),1,arq);
-
-    return new;
-}
-
-
-Node *getRoot(FILE* arq){
-    if(!arq) return NULL;
-    fseek(arq, 0, SEEK_END);
-    if(!ftell(arq)) return createNode(TRUE);
-    rewind(arq);
+    fseek(index_file, 0, SEEK_END);
+    if(!ftell(index_file)) return createNode(TRUE);
+    rewind(index_file);
+    Node *root = (Node*)malloc(sizeof(Node));
     long header;
-    fread(&header,sizeof(long),1,arq);
-    fseek(arq,header*(PAGESIZE),SEEK_SET);
-    Node *root = readPageFile(arq);
+    fread(&header, sizeof(long), 1, index_file);
+    fseek(index_file, header*(PAGESIZE), SEEK_SET);
+    fread(&root, sizeof(Node), 1, index_file);
+
     return root;
 }
 
+
+Register readRegisterFromFile(long RRN){
+    Register auxReg;
+
+    FILE *data_file = fopen("dados.txt", "ab+");
+    if(!data_file)  printf("Erro no arquivo de dados!\n");
+
+    fseek(data_file, RRN, SEEK_SET);
+    fread(&auxReg, sizeof(Register), 1, data_file);
+
+    return auxReg;
+}
+
+void printRegister(Register reg){
+    printf("Nusp: %d\n", reg.numUSP);
+    printf("Name: %s\n", reg.name);
+    printf("Surname: %s\n", reg.surname);
+    printf("Course: %s\n", reg.course);
+    printf("Grade: %.2f\n", reg.grade);
+}
+
+/*read on page*/
+Node *readPageFromFile(FILE *index_file, long RRN){
+    if(!index_file) return NULL;
+
+    Node *auxNode = (Node*) malloc (sizeof(Node));
+
+    fseek(index_file, RRN*PAGESIZE, SEEK_SET);
+    fread(auxNode, sizeof(Node), 1, index_file);
+
+    return auxNode;
+}
+
+void getRegister(){
+    long RRN;
+    Register auxReg = readRegisterFromFile(RRN);
+    printRegister(auxReg);
+}
+
 /*write in page*/
-int _writePageOnFile(FILE *arq,Node *page,long rrn){
-    if(!arq) return -1;
+int _writePageOnFile(FILE *index_file, Node *page, long RRN){
+    if(!index_file) return -1;
     if(!page) return -2;
-    if(rrn < 0) return -3;
-    
-    /*int i;
-    fwrite(&page->is_leaf,sizeof(bool),1,arq);
-    fwrite(&page->key_count,sizeof(int),1,arq);
-    fseek(arq,rrn*PAGESIZE,SEEK_SET);
-   
-    for(i =0 ; i < ORDER ; i++)
-        fwrite(&page->children[i],sizeof(long),1,arq);
+    if(RRN < 0) return -3;
 
-    for(i =0 ; i < ORDER -1 ; i++)
-        fwrite(&page->keys[i].prim_key,sizeof(int),1,arq);
-
-    for(i =0 ; i < ORDER - 1; i++)
-        fwrite(&page->keys[i].RNN,sizeof(long),1,arq);
-
-    return 1; */
-
-    
-    fwrite(&page,sizeof(Node),1,arq);
-
+    fseek(index_file, RRN, SEEK_SET);
+    fwrite(page, sizeof(Node), 1, index_file);
+    fwrite(page,sizeof(char),freeSpaceOnPage(),index_file);
+    return 1;
 }
 
 void writePageOnFile(FILE*arq,Node*page,long rrn){
@@ -133,4 +154,33 @@ void writePageOnFile(FILE*arq,Node*page,long rrn){
     }else{
         printf("Erro ao inserir pagina\n");
     }
+}
+
+
+void addIndexToTree(FILE* file, Node*root,Index *newIndex){
+    FILE *index_file = fopen("index.dat", "ab+");
+    if(!index_file) printf("Erro no index file!\n");
+
+    /*Node *auxNode = getRoot(file); */
+    if(root->is_leaf){
+
+    }
+
+    
+}
+
+/*leva até a rnn e pega uma pagina*/
+Node *getPageOnFile(FILE* file, long rrn){
+    if(!file) return NULL;
+    if(rrn<0)return NULL;
+    Node *new = createNode(TRUE); 
+    fseek(file,rrn*PAGESIZE,SEEK_SET);
+    fread(&new,sizeof(Node),1,file);
+    return new;
+}
+
+
+/*calculo do espraco sobrando pra fazer 4kb*/
+int freeSpaceOnPage(){ 
+    return  (PAGESIZE - (5 + ((ORDER-1)*12) + ((ORDER)*8)));
 }
