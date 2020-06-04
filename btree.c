@@ -22,11 +22,6 @@ Node *createNode(bool is_leaf){
     newNode->children = (long*) malloc (ORDER * sizeof(long));
      for(i = 0; i < ORDER;i++)
         newNode->children[i] = -1;
-    
-
-    for(i = 0; i < ORDER; i++)
-        newNode->children[i] = -1;
-
 
     return newNode;
 }
@@ -72,17 +67,19 @@ Index *writeRegisterOnFile(Register *newReg){
 void addRegister(){
     Register *newReg = createRegister();
     Index *newIndex;
+    Node *root = getRoot();
 
     if(newReg){
         newIndex = writeRegisterOnFile(newReg);
         if(newIndex){
             printf("registro adicionado com sucesso!\n");
-            addIndexToTree(newIndex);
+            addIndexToTree(root, newIndex);
         }
     }
 }
 
-Node *getRoot(FILE* index_file){
+Node *getRoot(){
+    FILE *index_file = fopen("index.dat", "ab+");
     if(!index_file) return NULL;
 
     fseek(index_file, 0, SEEK_END);
@@ -137,19 +134,20 @@ void getRegister(){
 }
 
 /*write in page*/
-int _writePageOnFile(FILE *index_file, Node *page, long RRN){
-    if(!index_file) return -1;
+int _writePageOnFile(Node *page, long RRN){
     if(!page) return -2;
     if(RRN < 0) return -3;
 
+    FILE *index_file = fopen("index.dat", "ab+"); 
+
     fseek(index_file, RRN, SEEK_SET);
     fwrite(page, sizeof(Node), 1, index_file);
-    fwrite(page,sizeof(char),freeSpaceOnPage(),index_file);
+    fwrite('@', sizeof(char), freeSpaceOnPage(), index_file);
     return 1;
 }
 
-void writePageOnFile(FILE*arq,Node*page,long rrn){
-    if(_writePageOnFile(arq,page,rrn)){
+void writePageOnFile(Node*page, long rrn){
+    if(_writePageOnFile(page, rrn)){
         printf("Pagina Inserida\n");
     }else{
         printf("Erro ao inserir pagina\n");
@@ -157,24 +155,27 @@ void writePageOnFile(FILE*arq,Node*page,long rrn){
 }
 
 
-void addIndexToTree(FILE* file, Node*root,Index *newIndex){
+void addIndexToTree(Node *root, Index *newIndex){
     FILE *index_file = fopen("index.dat", "ab+");
     if(!index_file) printf("Erro no index file!\n");
 
-    /*Node *auxNode = getRoot(file); */
-    if(root->is_leaf){
+    /*Checa se root esta cheia*/
+    if(root->key_count == ORDER-1){
 
     }
 
-    
+    /*checa se root tem filhos*/
+    if(root->is_leaf){
+
+    }
 }
 
 /*leva até a rnn e pega uma pagina*/
-Node *getPageOnFile(FILE* file, long rrn){
+Node *getPageFromFile(FILE* file, long rrn){
     if(!file) return NULL;
     if(rrn<0)return NULL;
     Node *new = createNode(TRUE); 
-    fseek(file,rrn*PAGESIZE,SEEK_SET);
+    fseek(file, rrn*PAGESIZE, SEEK_SET);
     fread(&new,sizeof(Node),1,file);
     return new;
 }
