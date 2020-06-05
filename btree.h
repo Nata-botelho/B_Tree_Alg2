@@ -11,6 +11,7 @@
 #define TRUE 1
 #define FALSE 0
 #define PAGESIZE 4096
+#define SUCCESS 1
 
 #include <stdbool.h>
 
@@ -46,9 +47,15 @@ Index *writeRegisterOnFile(Register*);
 
 void addRegister();
 
-Node *getRoot();
+long getRootRRN();
+
+Node *getRoot(long);
+
+int _writePageOnFile(Node *, long);
 
 void writePageOnFile(Node*, long);
+
+void getRegister(long RRN);
 
 Node *readPageFile(FILE*);
 
@@ -56,8 +63,8 @@ int freeSpaceOnPage();
 
 Node *getPageFromFile(FILE*, long);
 
-void addIndexToTree(Node*, Index*);
+int addIndexToTree(Node*, Index*, long);
 
-long bTreeSeach(FILE*,Node*,int );
+long bTreeSearch(FILE*, Node*, int);
 
 #endif

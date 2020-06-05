@@ -67,29 +67,43 @@ Index *writeRegisterOnFile(Register *newReg){
 void addRegister(){
     Register *newReg = createRegister();
     Index *newIndex;
-    Node *root = getRoot();
+    long rootRRN = getRootRRN();
+    Node *root = getRoot(rootRRN);
 
     if(newReg){
         newIndex = writeRegisterOnFile(newReg);
         if(newIndex){
             printf("registro adicionado com sucesso!\n");
-            addIndexToTree(root, newIndex);
+            addIndexToTree(root, newIndex, rootRRN);
+
         }
     }
 }
 
-Node *getRoot(){
+long getRootRRN(){
     FILE *index_file = fopen("index.dat", "ab+");
-    if(!index_file) return NULL;
 
+    /*se arquivo estiver vazio retorna 1 que sera a pos da root*/
     fseek(index_file, 0, SEEK_END);
-    if(!ftell(index_file)) return createNode(TRUE);
+    if(!ftell(index_file)) return 1;
+
     rewind(index_file);
+    long header = fread(&header, sizeof(long), 1, index_file);
+
+    fclose(index_file);
+    return header;
+}
+
+Node *getRoot(long rootRRN){
+
+    if(rootRRN == 1) return createNode(TRUE);
+
     Node *root = (Node*)malloc(sizeof(Node));
-    long header;
-    fread(&header, sizeof(long), 1, index_file);
-    fseek(index_file, header*(PAGESIZE), SEEK_SET);
+    
+    FILE *index_file = fopen("index.dat", "ab+");
+    fseek(index_file, rootRRN*(PAGESIZE), SEEK_SET);
     fread(&root, sizeof(Node), 1, index_file);
+    fclose(index_file);
 
     return root;
 }
@@ -116,19 +130,20 @@ void printRegister(Register reg){
 }
 
 /*read on page*/
-Node *readPageFromFile(FILE *index_file, long RRN){
+Node *readPageFromFile(long RRN){
+    FILE *index_file = fopen("index.dat", "ab+");
     if(!index_file) return NULL;
 
-    Node *auxNode = (Node*) malloc (sizeof(Node));
+    Node *auxNode = createNode(TRUE);
 
     fseek(index_file, RRN*PAGESIZE, SEEK_SET);
     fread(auxNode, sizeof(Node), 1, index_file);
+    fclose(index_file);
 
     return auxNode;
 }
 
-void getRegister(){
-    long RRN;
+void getRegister(long RRN){
     Register auxReg = readRegisterFromFile(RRN);
     printRegister(auxReg);
 }
@@ -142,7 +157,9 @@ int _writePageOnFile(Node *page, long RRN){
 
     fseek(index_file, RRN, SEEK_SET);
     fwrite(page, sizeof(Node), 1, index_file);
-    fwrite('@', sizeof(char), freeSpaceOnPage(), index_file);
+    fwrite("@", sizeof(char), freeSpaceOnPage(), index_file);
+    fclose(index_file);
+
     return 1;
 }
 
@@ -155,31 +172,43 @@ void writePageOnFile(Node*page, long rrn){
 }
 
 
-void addIndexToTree(Node *root, Index *newIndex){
-    FILE *index_file = fopen("index.dat", "ab+");
-    if(!index_file) printf("Erro no index file!\n");
+int addIndexToTree(Node *node, Index *newIndex, long RRN){
 
-    /*Checa se root esta cheia*/
-    if(root->key_count == ORDER-1){
+    int pos = node->key_count;
+
+    while(pos >= 0 && newIndex->prim_key < node->keys[pos].prim_key){
+        node->keys[pos+1] = node->keys[pos];
+        pos--;
+    }
+
+    /*checa se o no se trata de uma folha*/
+    if(node->is_leaf){
+        /*checa se esta cheio, caso nao esteja insere o indice e retorna sucesso*/
+        if(node->key_count < ORDER-1){
+
+            pos++;
+            node->keys[pos] = *newIndex;
+            node->key_count++;
+
+            writePageOnFile(node, RRN);
+            return SUCCESS;
+        }
+        else{
+            /*caso o no seja folha mas esteja cheio...*/
+
+        }
+    }
+    else{
+        /*caso o no tenha filhos*/
+        if(node->children[pos] > -1){
+            node = readPageFromFile(node->children[pos]);
+            addIndexToTree(readPageFromFile(node->children[pos]), newIndex, node->children[pos]);
+        }
 
     }
 
-    /*checa se root tem filhos*/
-    if(root->is_leaf){
-
-    }
+    
 }
-
-/*leva até a rnn e pega uma pagina*/
-Node *getPageFromFile(FILE* file, long rrn){
-    if(!file) return NULL;
-    if(rrn<0)return NULL;
-    Node *new = createNode(TRUE); 
-    fseek(file, rrn*PAGESIZE, SEEK_SET);
-    fread(&new,sizeof(Node),1,file);
-    return new;
-}
-
 
 /*calculo do espraco sobrando pra fazer 4kb*/
 int freeSpaceOnPage(){ 
@@ -187,9 +216,10 @@ int freeSpaceOnPage(){
 }
 
 
-long bTreeSeach(FILE*file,Node*page,int key){
-    int pos =0 ;
+long bTreeSearch(FILE*file, Node*page, int key){
+    int pos = 0 ;
     Node *NextPage;
+
     /*percorre até atingir o pos equivalente ou menor*/
     while(page->key_count > pos && page->keys[pos].prim_key < key){
             pos++;
@@ -207,9 +237,9 @@ long bTreeSeach(FILE*file,Node*page,int key){
         pos++;
     }
 
-    NextPage = getPageFromFile(file,page->children[pos-1]);
+    NextPage = readPageFromFile(page->children[pos-1]);
 
-    return bTreeSeach(file,NextPage,file);
+    return bTreeSearch(file, NextPage, key);
  }
 
 
