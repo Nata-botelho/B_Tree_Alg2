@@ -7,7 +7,7 @@
 #define _btree_c
 
 #define SIZE 16
-#define ORDER 5
+#define ORDER 5 /*maximo = 205*/
 #define TRUE 1
 #define FALSE 0
 #define PAGESIZE 4096
@@ -46,9 +46,9 @@ Index *writeRegisterOnFile(Register*);
 
 void addRegister();
 
-Node *getRoot(FILE*);
+Node *getRoot();
 
-void writePageOnFile(FILE*,Node*,long);
+void writePageOnFile(Node*, long);
 
 Node *readPageFile(FILE*);
 
@@ -56,7 +56,12 @@ int freeSpaceOnPage();
 
 Node *getPageOnFile(FILE*, long);
 
+<<<<<<< HEAD
 void addIndexToTree(FILE* , Node*,Index *);
+=======
+void addIndexToTree(Node*,Index *);
+
+>>>>>>> 0568e6854d102f4c8573c16a0004b4a49e00ac9e
 
 long bTreeSeach(FILE*,Node*,int );
 
