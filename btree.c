@@ -186,40 +186,29 @@ int freeSpaceOnPage(){
     return  (PAGESIZE - (5 + ((ORDER-1)*12) + ((ORDER)*8)));
 }
 
-long bTfreeSelect(btPage *node, int key, FILE *fp){
-    int pos;
-    /*printPageNode(node);*/
-    btPage *nextPage;
-    for(pos = 0; pos < node->numberOfKeys && node->records[pos].key < key; pos++);
-    if(pos == node->numberOfKeys) pos--;
-    
-    if(node->records[pos].key == key)
-        return node->records[pos].recordRRN;
-    if(node->isLeaf) 
-        return -1;
-
-    if(key < node->records[pos].key)
-        nextPage = getPage(node->childs[pos], fp);
-    else
-        nextPage = getPage(node->childs[pos+1], fp);
-    return bTreeSelect(nextPage, key, fp);
-}
-
 
 long bTreeSeach(FILE*file,Node*page,int key){
     int pos =0 ;
     Node *NextPage;
+    /*percorre até atingir o pos equivalente ou menor*/
     while(page->key_count > pos && page->keys[pos].prim_key < key){
             pos++;
     }
 
-    /*if(page->keys[pos].prim_key == key)
+    if(page->keys[pos].prim_key == key)
         return page->keys[pos].RNN;
 
     if(page->is_leaf) 
         return -1;
-    if()*/
-      
+
+    /*procura a posição para entrar para o filho*/
+    pos = 1;
+    while(pos-1 > page->keys[pos].prim_key){
+        pos++;
+    }
+
+    NextPage = getPageFromFile(file,page->children[pos-1]);
+
     return bTreeSeach(file,NextPage,file);
  }
 

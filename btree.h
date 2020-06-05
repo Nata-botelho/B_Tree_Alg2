@@ -54,14 +54,9 @@ Node *readPageFile(FILE*);
 
 int freeSpaceOnPage();
 
-Node *getPageOnFile(FILE*, long);
+Node *getPageFromFile(FILE*, long);
 
-<<<<<<< HEAD
-void addIndexToTree(FILE* , Node*,Index *);
-=======
-void addIndexToTree(Node*,Index *);
-
->>>>>>> 0568e6854d102f4c8573c16a0004b4a49e00ac9e
+void addIndexToTree(Node*, Index*);
 
 long bTreeSeach(FILE*,Node*,int );
 
