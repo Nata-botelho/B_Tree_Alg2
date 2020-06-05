@@ -42,6 +42,10 @@
 *.idb
 *.pdb
 
+# Data files
+*.dat
+*.txt
+
 # Kernel Module Compile Results
 *.mod*
 *.cmd
