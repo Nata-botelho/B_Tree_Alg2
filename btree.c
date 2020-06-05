@@ -206,12 +206,19 @@ long bTfreeSelect(btPage *node, int key, FILE *fp){
 
 
 long bTreeSeach(FILE*file,Node*page,int key){
-    int pos;
+    int pos =0 ;
     Node *NextPage;
-    if(page->keys[pos].prim_key == key)
+    while(page->key_count > pos && page->keys[pos].prim_key < key){
+            pos++;
+    }
+
+    /*if(page->keys[pos].prim_key == key)
         return page->keys[pos].RNN;
-    
-    if
+
+    if(page->is_leaf) 
+        return -1;
+    if()*/
+      
     return bTreeSeach(file,NextPage,file);
  }
 
