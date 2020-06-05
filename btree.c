@@ -184,3 +184,35 @@ Node *getPageOnFile(FILE* file, long rrn){
 int freeSpaceOnPage(){ 
     return  (PAGESIZE - (5 + ((ORDER-1)*12) + ((ORDER)*8)));
 }
+
+long bTfreeSelect(btPage *node, int key, FILE *fp){
+    int pos;
+    /*printPageNode(node);*/
+    btPage *nextPage;
+    for(pos = 0; pos < node->numberOfKeys && node->records[pos].key < key; pos++);
+    if(pos == node->numberOfKeys) pos--;
+    
+    if(node->records[pos].key == key)
+        return node->records[pos].recordRRN;
+    if(node->isLeaf) 
+        return -1;
+
+    if(key < node->records[pos].key)
+        nextPage = getPage(node->childs[pos], fp);
+    else
+        nextPage = getPage(node->childs[pos+1], fp);
+    return bTreeSelect(nextPage, key, fp);
+}
+
+
+long bTreeSeach(FILE*file,Node*page,int key){
+    int pos;
+    Node *NextPage;
+    if(page->keys[pos].prim_key == key)
+        return page->keys[pos].RNN;
+    
+    if
+    return bTreeSeach(file,NextPage,file);
+ }
+
+

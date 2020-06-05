@@ -56,8 +56,8 @@ int freeSpaceOnPage();
 
 Node *getPageOnFile(FILE*, long);
 
-void addIndexToTree(FILE* , Node*,Index *)
+void addIndexToTree(FILE* , Node*,Index *);
 
-
+long bTreeSeach(FILE*,Node*,int );
 
 #endif
