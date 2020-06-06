@@ -1,0 +1,11 @@
+bsi
+bcc
+eng
+mat
+enfermagem
+direito
+med
+estat
+fisica
+civil
+eletrica
