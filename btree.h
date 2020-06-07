@@ -49,7 +49,7 @@ void addRegister();
 
 long getRootRRN();
 
-Node *getRoot(long);
+Node *getRoot();
 
 int _writePageOnFile(Node *, long);
 
@@ -63,7 +63,11 @@ int freeSpaceOnPage();
 
 Node *getPageFromFile(FILE*, long);
 
-int addIndexToTree(Node*, Index*, long);
+int addIndexToTree(Index*);
+
+long insertOnIncompleteNode(Node *, Index *, long);
+
+void splitNode(Node*);
 
 long bTreeSearch(FILE*, Node*, int);
 
