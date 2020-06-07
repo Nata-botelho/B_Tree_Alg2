@@ -11,7 +11,7 @@
 
 Node *createNode(bool is_leaf){
     int i;
-    Node *newNode = (Node*) malloc (sizeof(Node));
+    Node *newNode = (Node*) malloc (PAGESIZE);
     
     newNode->is_leaf = is_leaf;
     newNode->key_count = 0;
@@ -23,7 +23,7 @@ Node *createNode(bool is_leaf){
         newNode->keys[i].prim_key = (int)i;
         newNode->keys[i].RNN = (long)i;
     }
-
+    printf("creating new node\n");
     memset(newNode->thrash, '@', THRASHSIZE);
 
     return newNode;
@@ -80,7 +80,8 @@ void addRegister(){
 }
 
 long getRootRRN(){
-    FILE *index_file = fopen("index.dat", "ab+");
+    FILE *index_file = fopen("index.dat", "rb+");
+    if(!index_file) {fopen("index.dat", "wb+"); printf("arquivo de dados n existe.. criado\n");}
     long header = 1;
     char thrash[PAGESIZE - sizeof(long)];
     memset(thrash, '@', PAGESIZE-sizeof(long));
@@ -106,22 +107,22 @@ Node *getRoot(){
     long rootRRN = getRootRRN();
     printf("o rrn da root eh %ld\n", rootRRN);
     
-    FILE *index_file = fopen("index.dat", "r+");
+    FILE *index_file = fopen("index.dat", "rb+");
     fseek(index_file, rootRRN*PAGESIZE, SEEK_SET);
 
     Node *root = (Node*) malloc (sizeof(Node));
 
-    fread(root, sizeof(Node), 1, index_file);
+    fread(root, PAGESIZE, 1, index_file);
     fclose(index_file);
 
-    if(root->key_count)    return root;
+    if(root->key_count > 0)    return root;
     else    return createNode(TRUE);
 }
 
 Register readRegisterFromFile(long RRN){
     Register auxReg;
 
-    FILE *data_file = fopen("dados.txt", "rb+");
+    FILE *data_file = fopen("dados.txt", "rb");
     if(!data_file)  printf("Erro no arquivo de dados!\n");
 
     fseek(data_file, RRN, SEEK_SET);
@@ -141,7 +142,7 @@ void printRegister(Register reg){
 
 /*read on page*/
 Node *readPageFromFile(long RRN){
-    FILE *index_file = fopen("index.dat", "rb+");
+    FILE *index_file = fopen("index.dat", "rb");
     if(!index_file) return NULL;
 
     Node *auxNode = createNode(TRUE);
@@ -162,20 +163,21 @@ void getRegister(long RRN){
 int writePageOnFile(Node *page, long RRN){
     if(!page) return -2;
     if(RRN < 0) return -3;
-    
-    FILE *index_file = fopen("index.dat", "ab+"); 
+    int i;
+    FILE *index_file = fopen("index.dat", "rb+"); 
 
-    /*printf("%d size page\n", (int)sizeof(Node));
+    printf("%d size page\n", (int)sizeof(Node));
     printf("%d - is leaf %d - key count\n\nChild rrn:\n", page->is_leaf, page->key_count);
-    for(int i = 0; i<ORDER; i++)
+    for(i = 0; i<ORDER; i++)
         printf("%ld ", page->children[i]);
     printf("\nkeys:\n");
-    for(int i = 0; i<ORDER-1; i++){
+    for(i = 0; i<page->key_count; i++){
         printf("%d ", page->keys[i].prim_key);
         printf("%ld ", page->keys[i].RNN);
-    }*/
-
+    }
+    printf("\n%ld - rrn\n", RRN);
     fseek(index_file, RRN*PAGESIZE, SEEK_SET);
+    printf("%d pos\n", (int)ftell(index_file));
     fwrite(page, sizeof(Node), 1, index_file);
 
     fclose(index_file);
@@ -205,7 +207,7 @@ int addIndexToTree(Index *newIndex){
 
 long insertOnIncompleteNode(Node *node, Index *newIndex, long RRN){
     int pos = node->key_count-1;
-    FILE *index_file = fopen("index.dat", "ab+");
+    FILE *index_file = fopen("index.dat", "rb+");
     printf("chegou um node aqui, vamo inserir!\n");
 
     if(node->is_leaf){
@@ -220,7 +222,6 @@ long insertOnIncompleteNode(Node *node, Index *newIndex, long RRN){
         node->keys[pos] = *newIndex;
         node->key_count++;
 
-        fseek(index_file, RRN*PAGESIZE, SEEK_SET);
         writePageOnFile(node, RRN);
         
         return RRN;
