@@ -21,6 +21,8 @@ Node *createNode(bool is_leaf){
 
     for(i=0; i<ORDER; i++)
         newNode->children[i] = -1;
+    
+    memset(newNode->thrash, '@', THRASHSIZE);
 
     return newNode;
 }
