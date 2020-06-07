@@ -27,7 +27,7 @@ typedef struct _register{
 
 typedef struct _index{
     long RNN; /* 8 */
-    int prim_key; /*  8 */
+    int prim_key; /* 8 */
     
 }Index;
 

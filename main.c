@@ -9,10 +9,6 @@
  
 int main(){
 
-    //printf("%d\n",(int)sizeof(bool));
-
-    //return 0;
-
     int option = 0;
 
     do{

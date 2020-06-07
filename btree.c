@@ -109,26 +109,25 @@ Node *getRoot(){
     FILE *index_file = fopen("index.dat", "r+");
     fseek(index_file, rootRRN*PAGESIZE, SEEK_SET);
 
-    Node *root = NULL;
-    root = malloc(sizeof(Node));
-    
-    fread(root, sizeof(Node), 1, index_file);
+    Node *root = (Node*) malloc (sizeof(Node));
 
+    fread(root, sizeof(Node), 1, index_file);
     fclose(index_file);
 
-    if(root)    return root;
+    if(root->key_count)    return root;
     else    return createNode(TRUE);
 }
 
 Register readRegisterFromFile(long RRN){
     Register auxReg;
 
-    FILE *data_file = fopen("dados.txt", "ab+");
+    FILE *data_file = fopen("dados.txt", "rb+");
     if(!data_file)  printf("Erro no arquivo de dados!\n");
 
     fseek(data_file, RRN, SEEK_SET);
     fread(&auxReg, sizeof(Register), 1, data_file);
 
+    fclose(data_file);
     return auxReg;
 }
 
@@ -142,7 +141,7 @@ void printRegister(Register reg){
 
 /*read on page*/
 Node *readPageFromFile(long RRN){
-    FILE *index_file = fopen("index.dat", "ab+");
+    FILE *index_file = fopen("index.dat", "rb+");
     if(!index_file) return NULL;
 
     Node *auxNode = createNode(TRUE);
@@ -163,13 +162,10 @@ void getRegister(long RRN){
 int writePageOnFile(Node *page, long RRN){
     if(!page) return -2;
     if(RRN < 0) return -3;
-
-    char thrash[PAGESIZE-sizeof(Node)];
-    memset(thrash, '@', PAGESIZE-sizeof(Node));
     
     FILE *index_file = fopen("index.dat", "ab+"); 
 
-    printf("%d size page\n", (int)sizeof(Node));
+    /*printf("%d size page\n", (int)sizeof(Node));
     printf("%d - is leaf %d - key count\n\nChild rrn:\n", page->is_leaf, page->key_count);
     for(int i = 0; i<ORDER; i++)
         printf("%ld ", page->children[i]);
@@ -177,24 +173,16 @@ int writePageOnFile(Node *page, long RRN){
     for(int i = 0; i<ORDER-1; i++){
         printf("%d ", page->keys[i].prim_key);
         printf("%ld ", page->keys[i].RNN);
-    }
+    }*/
 
     fseek(index_file, RRN*PAGESIZE, SEEK_SET);
     fwrite(page, sizeof(Node), 1, index_file);
-    //fwrite(thrash, sizeof(thrash), 1, index_file);
 
     fclose(index_file);
 
     return SUCCESS;
 }
 
-/*void writePageOnFile(Node*page, long rrn){
-    if(_writePageOnFile(page, rrn)){
-        printf("Pagina Inserida\n");
-    }else{
-        printf("Erro ao inserir pagina\n");
-    }
-}*/
 
 int addIndexToTree(Index *newIndex){
 
