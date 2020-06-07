@@ -23,6 +23,7 @@ Node *createNode(bool is_leaf){
         newNode->keys[i].prim_key = (int)i;
         newNode->keys[i].RNN = (long)i;
     }
+
     memset(newNode->thrash, '@', THRASHSIZE);
 
     return newNode;
