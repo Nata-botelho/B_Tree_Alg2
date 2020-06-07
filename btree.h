@@ -32,8 +32,8 @@ typedef struct _index{
 typedef struct _node{
     bool is_leaf; /*1*/
     int key_count; /* 4*/
-    long *children; /* 8 */
-    Index *keys; /* 12 */
+    long children[ORDER]; /* 8 */
+    Index keys[ORDER-1]; /* 12 */
 }Node;
 
 
@@ -53,7 +53,7 @@ Node *getRoot();
 
 int _writePageOnFile(Node *, long);
 
-void writePageOnFile(Node*, long);
+/*void writePageOnFile(Node*, long);*/
 
 void getRegister(long RRN);
 
