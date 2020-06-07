@@ -12,6 +12,7 @@
 #define FALSE 0
 #define PAGESIZE 4096
 #define SUCCESS 1
+#define TRASHSIZE PAGESIZE - ((ORDER-1)*16 + ORDER*8 + 8)
 
 #include <stdbool.h>
 
@@ -25,15 +26,17 @@ typedef struct _register{
 }Register;
 
 typedef struct _index{
-    int prim_key; /*  4 */
     long RNN; /* 8 */
+    int prim_key; /*  8 */
+    
 }Index;
 
 typedef struct _node{
-    bool is_leaf; /*1*/
+    int is_leaf; /*4*/
     int key_count; /* 4*/
     long children[ORDER]; /* 8 */
     Index keys[ORDER-1]; /* 12 */
+    char thrash[TRASHSIZE];
 }Node;
 
 

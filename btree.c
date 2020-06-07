@@ -105,12 +105,13 @@ Node *getRoot(){
     FILE *index_file = fopen("index.dat", "r+");
     fseek(index_file, rootRRN*PAGESIZE, SEEK_SET);
 
-    Node *root = NULL;
-    fread(&root, sizeof(Node), 1, index_file);
+    Node *root = (Node*)malloc(sizeof(Node));
+
+    fread(root, sizeof(Node), 1, index_file);
 
     fclose(index_file);
 
-    if(root)    return root;
+    if(root->key_count > 0)    return root;
     else    return createNode(TRUE);
 }
 
@@ -158,14 +159,14 @@ int writePageOnFile(Node *page, long RRN){
     if(!page) return -2;
     if(RRN < 0) return -3;
 
-    char thrash[PAGESIZE-sizeof(Node)];
-    memset(thrash, '@', PAGESIZE-sizeof(Node));
+    
+    memset(page->thrash, '@', PAGESIZE-sizeof(Node));
     
     FILE *index_file = fopen("index.dat", "ab+"); 
 
     fseek(index_file, RRN*PAGESIZE, SEEK_SET);
     fwrite(page, sizeof(Node), 1, index_file);
-    fwrite(thrash, sizeof(thrash), 1, index_file);
+    
 
     fclose(index_file);
 
@@ -201,7 +202,9 @@ int addIndexToTree(Index *newIndex){
 
 long insertOnIncompleteNode(Node *node, Index *newIndex, long RRN){
     int pos = node->key_count-1;
+    
     FILE *index_file = fopen("index.dat", "ab+");
+    
     printf("chegou um node aqui, vamo inserir!\n");
 
     if(node->is_leaf){
@@ -219,6 +222,7 @@ long insertOnIncompleteNode(Node *node, Index *newIndex, long RRN){
         fseek(index_file, RRN*PAGESIZE, SEEK_SET);
         writePageOnFile(node, RRN);
         
+        fclose(index_file);
         return RRN;
     }
     else{
@@ -233,7 +237,8 @@ long insertOnIncompleteNode(Node *node, Index *newIndex, long RRN){
         fread(node, sizeof(node), 1, index_file);
         insertOnIncompleteNode(node, newIndex, RRN);
     }
-
+    
+    fclose(index_file);
     return -1;
 }
 
@@ -270,10 +275,7 @@ void splitNode(Node *node){
     
 }
 
-/*calculo do espraco sobrando pra fazer 4kb*/
-int freeSpaceOnPage(){ 
-    return  (PAGESIZE - (5 + ((ORDER-1)*12) + ((ORDER)*8)));
-}
+
 
 
 long bTreeSearch(FILE*file, Node*page, int key){
