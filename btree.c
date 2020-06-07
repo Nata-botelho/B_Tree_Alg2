@@ -109,7 +109,9 @@ Node *getRoot(){
     fseek(index_file, rootRRN*PAGESIZE, SEEK_SET);
 
     Node *root = NULL;
-    fread(&root, sizeof(Node), 1, index_file);
+    root = malloc(sizeof(Node));
+    
+    fread(root, sizeof(Node), 1, index_file);
 
     fclose(index_file);
 
