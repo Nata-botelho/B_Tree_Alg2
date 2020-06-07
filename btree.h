@@ -12,7 +12,7 @@
 #define FALSE 0
 #define PAGESIZE 4096
 #define SUCCESS 1
-#define TRASHSIZE PAGESIZE - ((ORDER-1)*16 + ORDER*8 + 8)
+#define THRASHSIZE PAGESIZE - ((ORDER-1)*16 + ORDER*8 + 8)
 
 #include <stdbool.h>
 
@@ -36,7 +36,7 @@ typedef struct _node{
     int key_count; /* 4*/
     long children[ORDER]; /* 8 */
     Index keys[ORDER-1]; /* 12 */
-    char thrash[TRASHSIZE];
+    char thrash[THRASHSIZE];
 }Node;
 
 
