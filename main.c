@@ -10,14 +10,20 @@
 int main(){
 
     int option = 0;
+     system("clear");
 
     do{
-        scanf("%d", &option);
-
-        if(option == 1)
+        menu();
+         scanf("%d", &option);
+        if(option == 1){
             addRegister();
-            
-    }while(option);
+        }
+        else if(option == 2){
+            bTreeSearch();
+        }else if (option != 3){
+            printf("Opção errada!!\n");
+        }        
+    }while(option != 3);
     
     
     return 0;

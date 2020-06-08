@@ -72,6 +72,10 @@ long insertOnIncompleteNode(Node *, Index *, long);
 
 void splitNode(Node*);
 
-long bTreeSearch(FILE*, Node*, int);
+long _bTreeSearch(FILE*, Node*, int);
+
+void bTreeSearch();
+
+void menu();
 
 #endif
