@@ -7,12 +7,12 @@
 #define _btree_c
 
 #define SIZE 16
-#define ORDER 5 /*maximo = 205*/
+#define ORDER 171 
 #define TRUE 1
 #define FALSE 0
 #define PAGESIZE 4096
 #define SUCCESS 1
-#define THRASHSIZE PAGESIZE - ((ORDER-1)*16 + ORDER*8 + 8)
+#define THRASHSIZE PAGESIZE - ((ORDER-1)*sizeof(Index) + ORDER*sizeof(long) + 8)
 
 #include <stdbool.h>
 
@@ -68,9 +68,11 @@ Node *getPageFromFile(FILE*, long);
 
 int addIndexToTree(Index*);
 
-long insertOnIncompleteNode(Node *, Index *, long);
+long insertOnNode(Node *, Index *, long);
 
-void splitNode(Node*);
+void splitNode(Node *, int, Node *, long);
+
+Node* splitRoot(Node*);
 
 long _bTreeSearch(FILE*, Node*, int);
 

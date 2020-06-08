@@ -20,8 +20,8 @@ Node *createNode(bool is_leaf){
         newNode->children[i] = (long)-1;
 
     for(i = 0; i < (ORDER-1); i++){
-        newNode->keys[i].prim_key = (int)i;
-        newNode->keys[i].RNN = (long)i;
+        newNode->keys[i].prim_key = -1;
+        newNode->keys[i].RNN = (long)-1;
     }
     memset(newNode->thrash, '@', THRASHSIZE);
 
@@ -161,14 +161,13 @@ void getRegister(long RRN){
 int writePageOnFile(Node *page, long RRN){
     if(!page) return -2;
     if(RRN < 0) return -3;
-    int i;
-    FILE *index_file = fopen("index.dat", "rb+"); 
 
+    FILE *index_file = fopen("index.dat", "rb+"); 
     fseek(index_file, RRN*PAGESIZE, SEEK_SET);
     fwrite(page, sizeof(Node), 1, index_file);
 
     fclose(index_file);
-
+    printf("counter: %d\n", page->key_count);
     return SUCCESS;
 }
 
@@ -178,88 +177,140 @@ int addIndexToTree(Index *newIndex){
     Node *root = getRoot();
 
     if(root->key_count == ORDER-1){
-        splitNode(root);
-        insertOnIncompleteNode(root, newIndex, getRootRRN());
+        root = splitRoot(root);
+        insertOnNode(root, newIndex, getRootRRN());
 
         return SUCCESS;
     }
     else{
-        insertOnIncompleteNode(root, newIndex, getRootRRN());
+        insertOnNode(root, newIndex, getRootRRN());
         return SUCCESS;
     }
 }
 
-long insertOnIncompleteNode(Node *node, Index *newIndex, long RRN){
+long insertOnNode(Node *node, Index *newIndex, long RRN){
     int pos = node->key_count-1;
+    /*long auxRRN;
     FILE *index_file = fopen("index.dat", "rb+");
+    Node *auxNode;*/
 
     if(node->is_leaf){
-        while(pos >= 0 && (node->keys[pos].prim_key > newIndex->prim_key)){
-            node->keys[pos+1] = node->keys[pos];
-            pos--;
+        printf("folha\n");
+        if(node->key_count == ORDER-1){
+            printf("a folha ta cheia!\n");
         }
-        
-        pos++;
-        node->keys[pos] = *newIndex;
-        node->key_count++;
+        else{
+            while(pos >= 0 && (node->keys[pos].prim_key > newIndex->prim_key)){
+                node->keys[pos+1] = node->keys[pos];
+                pos--;
+            }
+            pos++;
+            node->keys[pos] = *newIndex;
+            node->key_count++;
 
-        writePageOnFile(node, RRN);
-        
-        return RRN;
+            writePageOnFile(node, RRN);
+            
+            return RRN;
+        }
     }
     else{
-        while(pos >= 0 && (node->keys[pos].prim_key > newIndex->prim_key))
+        printf("caiu no caso do nao folha\n");
+        exit(0);
+        /*while(pos >= 0 && (node->keys[pos].prim_key > newIndex->prim_key))
             pos--;
 
         pos++;
         fseek(index_file, node->children[pos], SEEK_SET);
-        RRN = node->children[pos];
-        fread(node, sizeof(node), 1, index_file);
-        insertOnIncompleteNode(node, newIndex, RRN);
+
+        auxRRN = node->children[pos];
+        auxNode = readPageFromFile(auxRRN);
+
+        if(auxNode && auxNode->key_count == ORDER-1){
+            splitNode(auxNode, pos, node, auxRRN);
+        }
+        insertOnNode(node, newIndex, RRN);*/
     }
 
     return -1;
 }
 
-void splitNode(Node *node){
-    int pos = ORDER/2, i;
-    FILE *index_file = fopen("index.dat", "ab+");
-    long auxRRN;
+void splitNode(Node *childNode, int pos, Node *mainNode, long childRRN){
+    int i, mid = (ORDER-1)/2;
+    Node *newNode = createNode(TRUE);
+    FILE *index_file = fopen("index.dat", "rb+");
 
-    Node *left = createNode(TRUE);
+    for(i=pos; i<mainNode->key_count; i++)
+        mainNode->keys[i+1] = mainNode->keys[i];
+    mainNode->keys[pos] = childNode->keys[mid];
+    mainNode->key_count++;
+
+    for(i=0; i<pos; i++){
+        newNode->keys[i] = childNode->keys[i];
+        childNode->key_count++;
+    }
+
+    for(i=0; i<pos; i++)
+        childNode->keys[i] = childNode->keys[pos+1];
+    for(i=pos; i<ORDER-1; i++){
+        childNode->keys[i].prim_key = -1;
+        childNode->key_count--;
+    }
     fseek(index_file, 0, SEEK_END);
-    auxRRN = ftell(index_file);
+    mainNode->children[pos] = ftell(index_file);
+    mainNode->children[pos+1] = childRRN;
+    writePageOnFile(newNode, ftell(index_file));
+}
 
-    for(i=pos; i >= 0; i--){
-        insertOnIncompleteNode(left, &node->keys[i], auxRRN);
+Node* splitRoot(Node *node){
+    int pos = (ORDER-1)/2, i, j;
+    FILE *index_file = fopen("index.dat", "rb+");
+    long auxRRN;
+    Node *left, *right;
+
+    if(node->children[0] != -1) left = createNode(FALSE);
+    else    left = createNode(TRUE);
+    if(node->children[node->key_count-1] != -1) right = createNode(FALSE);
+    else    right = createNode(TRUE);
+    
+    fseek(index_file, 0, SEEK_END);
+    auxRRN = (ftell(index_file)/PAGESIZE);
+
+    for(i=0; i < pos; i++){
+        left->keys[i] = node->keys[i];
+        left->children[i] = node->children[i];
         node->key_count--;
+        left->key_count++;
         node->keys[i].prim_key = -1;
     }
     node->children[0] = auxRRN;
+    writePageOnFile(left, auxRRN);
 
-    Node *right = createNode(TRUE);
     fseek(index_file, 0, SEEK_END);
-    auxRRN = ftell(index_file);
+    auxRRN = (ftell(index_file)/PAGESIZE);
 
-    for(i=pos; i <= ORDER-1; i++){
-        insertOnIncompleteNode(right, &node->keys[i], auxRRN);
+    for(j = 0, i=pos+1; i < ORDER-1; j++, i++){
+        right->keys[j] = node->keys[i];
+        right->children[j] = node->children[i];
         node->key_count--;
+        right->key_count++;
         node->keys[i].prim_key = -1;
     }
     node->children[1] = auxRRN;
+
+    writePageOnFile(right, auxRRN);
+
     node->keys[0] = node->keys[pos];
     node->keys[pos].prim_key = -1;
     node->is_leaf = FALSE;
+
+    auxRRN = getRootRRN();
+    writePageOnFile(node, auxRRN);
     
+    fclose(index_file);
+    return node;
 }
 
-/*calculo do espraco sobrando pra fazer 4kb*/
-int freeSpaceOnPage(){ 
-    return  (PAGESIZE - (5 + ((ORDER-1)*12) + ((ORDER)*8)));
-}
-
-
-long _bTreeSearch(FILE*file, Node*page, int key){
+long _bTreeSearch(FILE *file, Node *page, int key){
     int pos = 0 ;
     Node *NextPage;
 

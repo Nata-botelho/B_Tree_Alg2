@@ -103,11 +103,13 @@ int main(){
     int quantity, i;
 
     srand(time(NULL));
+    printf("Digite a quantidade de registros que devem ser criados:\n");
     scanf("%d", &quantity);
 
     for(i = 0; i < quantity; i++)
-        fprintf(data_file, "1\n%d\n%s\n%s\n%s\n%f\n", (i+200000), getRandomName(1), getRandomLastName(1), getRandomCourse(1), (float)(rand()%11));
+        fprintf(data_file, "1\n%d\n%s\n%s\n%s\n%.2f", (i+200000), getRandomName(1), getRandomLastName(1), getRandomCourse(1), (float)(rand()%11));
 
+    if(data_file)   printf("Criado arquivo entries.txt com %d registros!\n", quantity);
     fclose(data_file);
     getRandomName(0);
     getRandomLastName(0);
