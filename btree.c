@@ -69,10 +69,8 @@ void addRegister(){
 
     if(newReg){
         newIndex = writeRegisterOnFile(newReg);
-        if(newIndex){
+        if(newIndex)
             addIndexToTree(newIndex);
-            printf("\nRegistro inserido");
-        }
     }
 }
 
@@ -167,7 +165,6 @@ int writePageOnFile(Node *page, long RRN){
     fwrite(page, sizeof(Node), 1, index_file);
 
     fclose(index_file);
-    printf("counter: %d\n", page->key_count);
     return SUCCESS;
 }
 
@@ -190,9 +187,9 @@ int addIndexToTree(Index *newIndex){
 
 long insertOnNode(Node *node, Index *newIndex, long RRN){
     int pos = node->key_count-1;
-    /*long auxRRN;
+    long auxRRN;
     FILE *index_file = fopen("index.dat", "rb+");
-    Node *auxNode;*/
+    Node *auxNode;
 
     if(node->is_leaf){
         printf("folha\n");
@@ -209,14 +206,12 @@ long insertOnNode(Node *node, Index *newIndex, long RRN){
             node->key_count++;
 
             writePageOnFile(node, RRN);
-            
+            fclose(index_file);
             return RRN;
         }
     }
     else{
-        printf("caiu no caso do nao folha\n");
-        exit(0);
-        /*while(pos >= 0 && (node->keys[pos].prim_key > newIndex->prim_key))
+        while(pos >= 0 && (node->keys[pos].prim_key > newIndex->prim_key))
             pos--;
 
         pos++;
@@ -228,7 +223,7 @@ long insertOnNode(Node *node, Index *newIndex, long RRN){
         if(auxNode && auxNode->key_count == ORDER-1){
             splitNode(auxNode, pos, node, auxRRN);
         }
-        insertOnNode(node, newIndex, RRN);*/
+        insertOnNode(node, newIndex, RRN);
     }
 
     return -1;
@@ -334,8 +329,7 @@ long _bTreeSearch(FILE *file, Node *page, int key){
     NextPage = readPageFromFile(page->children[pos-1]);
 
     return _bTreeSearch(file, NextPage, key);
- }
-
+}
 
 void bTreeSearch(){
     FILE *index_file = fopen("index.dat", "rb+");
